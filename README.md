@@ -1,4 +1,4 @@
-binproc
+cblibs
 =======
 
-Header-only binary data procession library.
+Libraries written by Cruelbob.
