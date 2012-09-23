@@ -3,8 +3,8 @@
 
 namespace cb {
     namespace vkpp {
-        vksession::vksession(const std::string& login,const std::string& password,const std::string& api_key):
-          impl(new(std::nothrow) vksession_impl(login,password,api_key)) {
+        vksession::vksession(const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope):
+          impl(new(std::nothrow) vksession_impl(login,password,api_key,scope)) {
             if(!impl) {
                 throw cb::error::error(err_codes::ALLOC_MEMORY_FOR_VKSESSION_IMPL_FAILED,
                                            "Allocating memory for vksession_impl failed");
