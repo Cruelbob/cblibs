@@ -15,7 +15,11 @@ namespace cb {
                 ALLOC_MEMORY_FOR_VKSESSION_IMPL_FAILED,
                 CURL_INIT_ERROR,
                 USER_AUTH_ERROR,
-                APP_AUTH_ERROR
+                APP_AUTH_ERROR,
+                API_AUTH_REQUEST_ERROR,
+                ALLOW_URL_NOT_FOUND,
+                ALLOW_REQUEST_ERROR,
+                ACCESS_TOKEN_NOT_RECEIVED
             };
         }
         namespace rights {

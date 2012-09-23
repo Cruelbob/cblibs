@@ -61,6 +61,8 @@ namespace cb {
                 curl_easy_setopt(curl.get(), CURLOPT_FOLLOWLOCATION,1);
                 curl_easy_setopt(curl.get(), CURLOPT_COOKIEFILE, "");
                 curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, dummy_writer);
+                curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0L);
+                curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0L);
                 if(auth_user(login,password)) {
                     if(auth_api(api_key,scope)) {
                         return;
@@ -118,14 +120,13 @@ namespace cb {
             if(res == CURLE_OK) {
                 std::regex rex("^.+location.href = \"(.+)\"\\+addr;$");
                 std::smatch results;
+                std::ofstream f("1.html");
+                f << response;
                 if(std::regex_search(response,results,rex)) {
                     std::string allow_request = results[1];
-                    allow_request = "http"+allow_request.substr(5);
                     curl_easy_setopt(curl.get(), CURLOPT_URL,allow_request.c_str());
                     res = curl_easy_perform(curl.get());
-                    std::cout << allow_request << std::endl;
                     if(res == CURLE_OK) {
-                        std::cout << 1 << std::endl;
                         char *raw_url = nullptr,
                              *unq_url = nullptr;
                         curl_easy_getinfo(curl.get(),CURLINFO_EFFECTIVE_URL,&raw_url);
@@ -140,8 +141,20 @@ namespace cb {
                             info_.user_id = results[3];
                             return true;
                         }
+                        else {
+                            throw cb::error::error(err_codes::ACCESS_TOKEN_NOT_RECEIVED,"Access token not received.");
+                        }
+                    }
+                    else {
+                        throw cb::error::error(err_codes::ALLOW_REQUEST_ERROR,std::string("Curl:")+errorBuffer);
                     }
                 }
+                else {
+                    throw cb::error::error(err_codes::ALLOW_URL_NOT_FOUND,"Allow url not found.");
+                }
+            }
+            else {
+                throw cb::error::error(err_codes::API_AUTH_REQUEST_ERROR,std::string("Curl:")+errorBuffer);
             }
             return false;
         }
@@ -149,7 +162,7 @@ namespace cb {
             return info_;
         }
         std::string vksession::vksession_impl::raw_call(const std::string& method,const parameter_list& param_list) {
-            std::string request = "api.vk.com/method/"+method+"?";
+            std::string request = "https://api.vk.com/method/"+method+"?";
             for(auto it = param_list.begin()++;it != param_list.end();++it) {
                 request += it->first+"="+it->second+"&";
             }
