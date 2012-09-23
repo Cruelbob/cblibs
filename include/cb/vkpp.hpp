@@ -19,7 +19,8 @@ namespace cb {
                 API_AUTH_REQUEST_ERROR,
                 ALLOW_URL_NOT_FOUND,
                 ALLOW_REQUEST_ERROR,
-                ACCESS_TOKEN_NOT_RECEIVED
+                ACCESS_TOKEN_NOT_RECEIVED,
+                CALL_REQUEST_ERROR
             };
         }
         namespace rights {
@@ -43,7 +44,7 @@ namespace cb {
                 ADS = 65536,
                 OFFLINE = 131072,
                 NOHTTPS = 262144,
-                /* all not includes "NOHTTPS" and "ADS" scope*/
+                /* "ALL" not includes "NOHTTPS" and "ADS" scope*/
                 ALL = NOTIFY | FRIENDS | PHOTOS | AUDIO | VIDEO|
                       DOCS | NOTES | PAGES | STATUS | OFFERS |
                       QUESTIONS | WALL | GROUPS | MESSAGES | NOTIFICATIONS |

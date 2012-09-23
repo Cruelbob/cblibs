@@ -82,7 +82,7 @@ namespace cb {
         vksession::vksession_impl::~vksession_impl() {
         }
         bool vksession::vksession_impl::auth_user(const std::string& login,const std::string& pass) {
-            std::string params = "vk.com/login.php?email="+login+"&pass="+pass;
+            std::string params = "https://vk.com/login.php?email="+login+"&pass="+pass;
             curl_easy_setopt(curl.get(), CURLOPT_URL,params.c_str());
             CURLcode res;
             res = curl_easy_perform(curl.get());
@@ -105,10 +105,10 @@ namespace cb {
             return false;
         }
         bool vksession::vksession_impl::auth_api(const std::string& api_key,uint32_t scope) {
-            std::string request = "oauth.vk.com/authorize?"
+            std::string request = "https://oauth.vk.com/authorize?"
                                   "client_id="+api_key+"&"
                                   "scope="+generate_scope_string(scope)+"&" 
-                                  "redirect_uri=http://oauth.vk.com/blank.html&"
+                                  "redirect_uri=https://oauth.vk.com/blank.html&"
                                   "display=popup&"
                                   "response_type=token";
             curl_easy_setopt(curl.get(),CURLOPT_URL, request.c_str());
@@ -120,8 +120,6 @@ namespace cb {
             if(res == CURLE_OK) {
                 std::regex rex("^.+location.href = \"(.+)\"\\+addr;$");
                 std::smatch results;
-                std::ofstream f("1.html");
-                f << response;
                 if(std::regex_search(response,results,rex)) {
                     std::string allow_request = results[1];
                     curl_easy_setopt(curl.get(), CURLOPT_URL,allow_request.c_str());
@@ -179,7 +177,9 @@ namespace cb {
                 curl_free(s);
                 return response;
             }
-            return "";
+            else {
+                throw cb::error::error(err_codes::CALL_REQUEST_ERROR,"Call request error.");
+            }
         }
     };
 };

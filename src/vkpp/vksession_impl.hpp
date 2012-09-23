@@ -1,3 +1,6 @@
+#ifndef VKSESSION_IMPL_HPP
+#define VKSESSION_IMPL_HPP
+
 #include <cb\vkpp.hpp>
 
 #include <curl\curl.h>
@@ -17,3 +20,5 @@ namespace cb {
         };
     }
 }
+
+#endif // VKSESSION_IMPL_HPP
