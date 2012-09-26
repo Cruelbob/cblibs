@@ -6,14 +6,14 @@
 
 static char errorBuffer[CURL_ERROR_SIZE];
 int dummy_writer(char *data, size_t size, size_t nmemb, std::string *buffer) {
-    return size * nmemb;
+    return static_cast<int>(size * nmemb);
 }
 int writer(char *data, size_t size, size_t nmemb, std::string *buffer) {
     size_t result = size * nmemb;
     if(buffer) {
         buffer->append(data,result);
     }
-    return result;
+    return static_cast<int>(result);
 }
 std::string generate_scope_string(uint32_t scope) {
     std::string scope_string;
@@ -123,7 +123,7 @@ namespace cb {
                              *unq_url = nullptr;
                         curl_easy_getinfo(curl.get(),CURLINFO_EFFECTIVE_URL,&raw_url);
                         int length = 0;
-                        unq_url = curl_easy_unescape(curl.get(),raw_url,strlen(raw_url),&length);
+                        unq_url = curl_easy_unescape(curl.get(),raw_url,static_cast<int>(strlen(raw_url)),&length);
                         std::string session = unq_url;
                         curl_free(unq_url);
                         rex = ".+access_token=(.+)&expires_in=(.+)&user_id=(.+)";
@@ -165,7 +165,7 @@ namespace cb {
             CURLcode res = curl_easy_perform(curl.get());
             curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, dummy_writer);
             if(res == CURLE_OK) {
-                char *s = curl_unescape(response.c_str(),response.length());
+                char *s = curl_unescape(response.c_str(),static_cast<int>(response.length()));
                 std::string response = s;
                 curl_free(s);
                 code = result_code::OK;

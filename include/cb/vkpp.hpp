@@ -5,8 +5,7 @@
 #include <list>
 #include <utility>
 #include <cstdint>
-
-#include <cb\error.hpp>
+#include <memory>
 
 namespace cb {
     namespace vkpp {

@@ -2,6 +2,7 @@
 #define VKSESSION_IMPL_HPP
 
 #include <cb\vkpp.hpp>
+#include <memory>
 
 #include <curl\curl.h>
 
