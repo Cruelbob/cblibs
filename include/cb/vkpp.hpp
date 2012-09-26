@@ -10,19 +10,21 @@
 
 namespace cb {
     namespace vkpp {
-        namespace err_codes {
-            enum err_codes {
-                ALLOC_MEMORY_FOR_VKSESSION_IMPL_FAILED,
-                CURL_INIT_ERROR,
-                USER_AUTH_ERROR,
-                APP_AUTH_ERROR,
-                API_AUTH_REQUEST_ERROR,
-                ALLOW_URL_NOT_FOUND,
-                ALLOW_REQUEST_ERROR,
-                ACCESS_TOKEN_NOT_RECEIVED,
-                CALL_REQUEST_ERROR
-            };
-        }
+        enum class result_code {
+            OK,
+            ALLOC_MEMORY_FOR_VKSESSION_IMPL_FAILED,
+            CURL_INIT_ERROR,
+            USER_AUTH_ERROR,
+            APP_AUTH_ERROR,
+            API_AUTH_REQUEST_ERROR,
+            ALLOW_URL_NOT_FOUND,
+            ALLOW_REQUEST_ERROR,
+            ACCESS_TOKEN_NOT_RECEIVED,
+            CALL_REQUEST_ERROR,
+            CURL_ERROR,
+            COOKIES_NOT_FOUND,
+            REMIXSID_NOT_FOUND
+        };
         namespace rights {
             enum rights {
                 NOTIFY = 1,
@@ -51,6 +53,7 @@ namespace cb {
                       STATS | ADS | OFFLINE
             };
         }
+        const char* get_error_string(result_code code);
         class vksession {
             struct session_info
             {
@@ -68,8 +71,22 @@ namespace cb {
             typedef std::list<method_parameter> parameter_list;
 
             vksession(const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope = rights::ALL);
+            vksession(result_code& code,const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope = rights::ALL);
+            void open(const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope = rights::ALL);
+            void open(result_code& code,const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope = rights::ALL);
+            void close();
+            bool is_open();
             session_info info() const;
             std::string raw_call(const std::string& method,const parameter_list& param_list = parameter_list());
+            std::string raw_call(result_code& code,const std::string& method,const parameter_list& param_list = parameter_list());
+        };
+        class vksession_exception: public std::exception {
+          protected:
+            result_code code_;
+          public:
+            vksession_exception(result_code res_code);
+            virtual const char* what();
+            virtual result_code code();
         };
     };
 };

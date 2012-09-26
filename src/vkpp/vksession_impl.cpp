@@ -1,12 +1,8 @@
 #include <vksession_impl.hpp>
 
-#include <cstdarg>
 #include <regex>
-#include <ostream>
-#include <fstream>
 
 #include <curl\curl.h>
-#include <md5.hpp>
 
 static char errorBuffer[CURL_ERROR_SIZE];
 int dummy_writer(char *data, size_t size, size_t nmemb, std::string *buffer) {
@@ -16,14 +12,6 @@ int writer(char *data, size_t size, size_t nmemb, std::string *buffer) {
     size_t result = size * nmemb;
     if(buffer) {
         buffer->append(data,result);
-    }
-    return result;
-}
-int stream_writer(char *data, size_t size, size_t nmemb, std::ostream *ostr)
-{
-    size_t result = size * nmemb;
-    if(ostr) {
-        ostr->write(data,result);
     }
     return result;
 }
@@ -53,7 +41,7 @@ std::string generate_scope_string(uint32_t scope) {
 
 namespace cb {
     namespace vkpp {
-        vksession::vksession_impl::vksession_impl(const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope):
+        vksession::vksession_impl::vksession_impl(result_code& code,const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope):
           curl(curl_easy_init(),curl_easy_cleanup) {
             info_.api_key = api_key;
             if(curl) {
@@ -63,25 +51,29 @@ namespace cb {
                 curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, dummy_writer);
                 curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0L);
                 curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0L);
-                if(auth_user(login,password)) {
-                    if(auth_api(api_key,scope)) {
-                        return;
+                
+                result_code res = result_code::OK;
+                res = auth_user(login,password);
+                if(res == result_code::OK) {
+                    res = auth_api(api_key,scope);
+                    if(res == result_code::OK) {
+                        code = result_code::OK;
                     }
                     else {
-                        throw cb::error::error(err_codes::APP_AUTH_ERROR,"Error while app authorization.");
+                        code = result_code::APP_AUTH_ERROR;
                     }
                 }
                 else {
-                    throw cb::error::error(err_codes::USER_AUTH_ERROR,"Error while user authorization.");
+                    code = result_code::USER_AUTH_ERROR;
                 }
             }
             else {
-                throw cb::error::error(err_codes::CURL_INIT_ERROR,"Error while initialize curl.");
+                code = result_code::CURL_INIT_ERROR;
             }
         }
         vksession::vksession_impl::~vksession_impl() {
         }
-        bool vksession::vksession_impl::auth_user(const std::string& login,const std::string& pass) {
+        result_code vksession::vksession_impl::auth_user(const std::string& login,const std::string& pass) {
             std::string params = "https://vk.com/login.php?email="+login+"&pass="+pass;
             curl_easy_setopt(curl.get(), CURLOPT_URL,params.c_str());
             CURLcode res;
@@ -96,15 +88,17 @@ namespace cb {
                         if(cookie.find("remixsid") != std::string::npos) {
                             info_.remixsid = cookie.substr(cookie.rfind('\t')+1);
                             curl_slist_free_all(cookies);
-                            return true;
+                            return result_code::OK;
                         }
                     }
                     curl_slist_free_all(cookies);
+                    return result_code::REMIXSID_NOT_FOUND;
                 }
+                return result_code::COOKIES_NOT_FOUND;
             }
-            return false;
+            return result_code::CURL_ERROR;
         }
-        bool vksession::vksession_impl::auth_api(const std::string& api_key,uint32_t scope) {
+        result_code vksession::vksession_impl::auth_api(const std::string& api_key,uint32_t scope) {
             std::string request = "https://oauth.vk.com/authorize?"
                                   "client_id="+api_key+"&"
                                   "scope="+generate_scope_string(scope)+"&" 
@@ -137,29 +131,28 @@ namespace cb {
                             info_.access_token = results[1];
                             info_.expires_in = results[2];
                             info_.user_id = results[3];
-                            return true;
+                            return result_code::OK;
                         }
                         else {
-                            throw cb::error::error(err_codes::ACCESS_TOKEN_NOT_RECEIVED,"Access token not received.");
+                            return result_code::ACCESS_TOKEN_NOT_RECEIVED;
                         }
                     }
                     else {
-                        throw cb::error::error(err_codes::ALLOW_REQUEST_ERROR,std::string("Curl:")+errorBuffer);
+                        return result_code::ALLOW_REQUEST_ERROR;
                     }
                 }
                 else {
-                    throw cb::error::error(err_codes::ALLOW_URL_NOT_FOUND,"Allow url not found.");
+                    return result_code::ALLOW_URL_NOT_FOUND;
                 }
             }
             else {
-                throw cb::error::error(err_codes::API_AUTH_REQUEST_ERROR,std::string("Curl:")+errorBuffer);
+                return result_code::CURL_ERROR;
             }
-            return false;
         }
         vksession::session_info vksession::vksession_impl::info() const {
             return info_;
         }
-        std::string vksession::vksession_impl::raw_call(const std::string& method,const parameter_list& param_list) {
+        std::string vksession::vksession_impl::raw_call(result_code& code,const std::string& method,const parameter_list& param_list) {
             std::string request = "https://api.vk.com/method/"+method+"?";
             for(auto it = param_list.begin()++;it != param_list.end();++it) {
                 request += it->first+"="+it->second+"&";
@@ -175,10 +168,12 @@ namespace cb {
                 char *s = curl_unescape(response.c_str(),response.length());
                 std::string response = s;
                 curl_free(s);
+                code = result_code::OK;
                 return response;
             }
             else {
-                throw cb::error::error(err_codes::CALL_REQUEST_ERROR,"Call request error.");
+                code = result_code::CALL_REQUEST_ERROR;
+                return "";
             }
         }
     };
