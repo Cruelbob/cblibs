@@ -9,7 +9,7 @@ namespace cb {
         vksession::vksession(result_code& code,const std::string& login,const std::string& password,const std::string& api_key,uint32_t scope) {
             open(code,login,password,api_key,scope);
         }
-        vksession::session_info vksession::info() const {
+        session_info vksession::info() const {
             return impl->info();
         }
         std::string vksession::raw_call(const std::string& method,const parameter_list& param_list) {

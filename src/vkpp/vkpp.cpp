@@ -6,10 +6,6 @@ namespace cb {
             switch(code) {
               case result_code::OK:
                 return "";
-              case result_code::APP_AUTH_ERROR:
-                return "Error while app authorization.";
-              case result_code::USER_AUTH_ERROR:
-                return "Error while user authorization.";
               case result_code::CURL_INIT_ERROR:
                 return "Error while initialize curl.";
               case result_code::CURL_ERROR:

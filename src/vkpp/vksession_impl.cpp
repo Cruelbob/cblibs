@@ -1,6 +1,8 @@
 #include <vksession_impl.hpp>
 
+#include <fstream>
 #include <regex>
+#include <iostream>
 
 #include <curl\curl.h>
 
@@ -58,14 +60,10 @@ namespace cb {
                     res = auth_api(api_key,scope);
                     if(res == result_code::OK) {
                         code = result_code::OK;
-                    }
-                    else {
-                        code = result_code::APP_AUTH_ERROR;
+                        return;
                     }
                 }
-                else {
-                    code = result_code::USER_AUTH_ERROR;
-                }
+                code = res;
             }
             else {
                 code = result_code::CURL_INIT_ERROR;
@@ -77,7 +75,18 @@ namespace cb {
             std::string params = "https://vk.com/login.php?email="+login+"&pass="+pass;
             curl_easy_setopt(curl.get(), CURLOPT_URL,params.c_str());
             CURLcode res;
+
+            std::string response;
+            curl_easy_setopt(curl.get(),CURLOPT_WRITEFUNCTION,writer);
+            curl_easy_setopt(curl.get(),CURLOPT_WRITEDATA,&response);
+            
             res = curl_easy_perform(curl.get());
+
+            curl_easy_setopt(curl.get(),CURLOPT_WRITEFUNCTION,dummy_writer);
+
+            std::ofstream file("1df.html");
+            file << response;
+
             if(res == CURLE_OK) {
                 curl_slist *cookies = nullptr;
                 res = curl_easy_getinfo(curl.get(), CURLINFO_COOKIELIST, &cookies);
@@ -149,7 +158,7 @@ namespace cb {
                 return result_code::CURL_ERROR;
             }
         }
-        vksession::session_info vksession::vksession_impl::info() const {
+        session_info vksession::vksession_impl::info() const {
             return info_;
         }
         std::string vksession::vksession_impl::raw_call(result_code& code,const std::string& method,const parameter_list& param_list) {
