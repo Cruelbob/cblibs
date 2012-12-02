@@ -22,14 +22,13 @@ namespace cb {
         std::vector<uint8_t> input_data_;
         std::vector<uint8_t> output_data_;
         bool is_open;
-        std::atomic_int cn_waitings;
+        std::atomic<int> cn_waitings;
         void on_receive_data(uint16_t id,const boost::system::error_code& err_code);
         //void on_receive_header(const boost::system::error_code& err_code);
         void on_send_result(const boost::system::error_code& err_code);
         void read_data(size_type size,id_type id);
         //void read_header();
       protected:
-        typedef std::shared_ptr<boost::asio::ip::tcp::socket> p_socket_type;
         virtual void on_packet(uint16_t id,std::vector<uint8_t> data) {
         }
         virtual void on_error(int err_code) {

@@ -3,25 +3,19 @@
 #include <boost/bind.hpp>
 #include <iostream>
 
-namespace boost { 
-    template<class T> const T* get_pointer(const std::shared_ptr<T>& ptr) 
-    {
-        return ptr.get();
-    }
-
-    template<class T> T* get_pointer(std::shared_ptr<T>& ptr)
-    {
-        return ptr.get();
-    }
-}
-
 namespace cb {
+    template<class T> const T* get_pointer(const std::shared_ptr<T>& ptr) {
+        return ptr.get();
+    }
+    template<class T> T* get_pointer(std::shared_ptr<T>& ptr) {
+        return ptr.get();
+    }
     connection::connection(p_socket_type& p_socket):
       p_socket_(p_socket),
       ip_(p_socket_->remote_endpoint().address().to_string()),
       start_time_(std::chrono::system_clock::now()),
-      is_open(false) {
-          std::atomic_init(&cn_waitings,0);
+      is_open(false),
+      cn_waitings(0) {
     }
     std::string connection::get_ip(){
         return ip_;
@@ -32,7 +26,7 @@ namespace cb {
     }
     void connection::send_packet(id_type id,std::vector<uint8_t> data) {
         if(!is_open) {
-            throw std::exception("the connection is not fully opened.");
+            throw std::runtime_error("the connection is not fully opened.");
         }
         size_type data_size = static_cast<size_type>(data.size());
         size_t header_size = sizeof(id_type)+sizeof(size_type);

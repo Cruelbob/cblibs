@@ -6,7 +6,7 @@
 #include <cstring>
 #include <vector>
 
-#include <cb\endian.hpp>
+#include <cb/endian.hpp>
 
 template<typename BinaryProcessor,typename T>
 void process_binary(BinaryProcessor &bp,T &t)

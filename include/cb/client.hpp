@@ -41,6 +41,7 @@ namespace cb {
       public:
         client(std::string host,uint16_t port):
             endpoint_it_(tcp::resolver(io_service_).resolve(tcp::resolver::query(host,boost::lexical_cast<std::string>(port)))){}
+        virtual ~client() {}
         void run() {
             start_connection();
             io_service_.run();

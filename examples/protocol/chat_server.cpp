@@ -1,10 +1,11 @@
 #include <iostream>
 #include <cb/server.hpp>
 #include <list>
+#include <boost/lexical_cast.hpp>
 
 class server_methods {
   public:
-    virtual void send_msg_to_all(std::string& msg) = 0;
+    virtual void send_msg_to_all(const std::string& msg) = 0;
 };
 
 class my_con: public cb::connection {
@@ -46,17 +47,17 @@ class my_s: public cb::server<my_con>, public server_methods {
         auto it = con_list.end();
         --it;
         std::shared_ptr<my_con> p_con(new my_con(p_socket,dynamic_cast<server_methods*>(this)),
-                                                 [it,this](my_con* con) {
-                                                     delete con;
-                                                     erase_con_from_list(it);
-                                                 });
+                                      [it,this](my_con* con) {
+               	                          delete con;
+                                          erase_con_from_list(it);
+                                      });
         con_list.back() = p_con;
         return p_con;
     }
-    void erase_con_from_list(std::list<std::weak_ptr<my_con>>::const_iterator it) {
+    void erase_con_from_list(std::list<std::weak_ptr<my_con>>::iterator it) {
         con_list.erase(it);
     }
-    void send_msg_to_all(std::string& msg) override {
+    void send_msg_to_all(const std::string& msg) override {
         for(auto& it : con_list) {
             it.lock()->send_msg(msg);
         }
@@ -65,10 +66,10 @@ class my_s: public cb::server<my_con>, public server_methods {
     my_s(uint16_t port): cb::server<my_con>(port) {}
 };
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc,char* argv[])
 {
-    my_s s1(2546);
+    my_s s1(boost::lexical_cast<uint16_t>(argv[1]));
     s1.run();
-	return 0;
+    return 0;
 }
 
