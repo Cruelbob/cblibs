@@ -1,6 +1,7 @@
 #include <cb/client.hpp>
 #include <iostream>
 #include <thread>
+#include <boost/lexical_cast.hpp>
 
 class my_con: public cb::connection {
     std::atomic_bool input_enable;
@@ -60,9 +61,9 @@ class my_con: public cb::connection {
     }
 };
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc,char* argv[])
 {
-    cb::client<my_con> c1("5.19.251.81",2546);
+  cb::client<my_con> c1("5.19.251.81",boost::lexical_cast<uint16_t>(argv[1]));
     c1.run();
-	return 0;
+    return 0;
 }

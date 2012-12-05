@@ -5,9 +5,9 @@ project(cblibs)
 FILE(MAKE_DIRECTORY lib)
 FILE(MAKE_DIRECTORY bin/protocol)
 
-aux_source_directory(src/protocol CB_PROTOCOL_LIB_SOURCES)
-set(CB_PROTOCOL_EXAMPLE_CHAT_SERVER_SOURCES examples/protocol/chat_server.cpp)
-set(CB_PROTOCOL_EXAMPLE_CHAT_CLIENT_SOURCES examples/protocol/chat_client.cpp)
+aux_source_directory(src/protocol/lib CB_PROTOCOL_LIB_SOURCES)
+set(CB_PROTOCOL_EXAMPLE_CHAT_SERVER_SOURCES src/protocol/examples/chat_server.cpp)
+set(CB_PROTOCOL_EXAMPLE_CHAT_CLIENT_SOURCES src/protocol/examples/chat_client.cpp)
 
 find_package(Boost COMPONENTS system REQUIRED)
 
@@ -21,6 +21,9 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/protocol)
 
 find_package(Threads)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 add_executable(chat_server ${CB_PROTOCOL_EXAMPLE_CHAT_SERVER_SOURCES})
 add_executable(chat_client ${CB_PROTOCOL_EXAMPLE_CHAT_CLIENT_SOURCES})
