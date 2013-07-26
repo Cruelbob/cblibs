@@ -45,6 +45,11 @@ void connection::read_body(id_type packet_id,size_type packet_size) {
                 read_header();
                 auto handler = packets_.find(packet_id);
                 if(handler != packets_.end()) {
+                    //std::cout << "read | ";
+                    //for(auto it: *buf) {
+                    //    std::cout << std::hex << (int)it << " ";
+                    //}
+                    //std::cout << "|" << std::dec << std::endl;
                     handler->second(*buf);
                 } else {
                     close();
@@ -56,6 +61,11 @@ void connection::read_body(id_type packet_id,size_type packet_size) {
 }
 
 void connection::send(const buffer_t& buf) {
+    //std::cout << "send | ";
+    //for(auto it: buf) {
+    //    std::cout << std::hex << (int)it << " ";
+    //}
+    //std::cout << "|" << std::dec << std::endl;
     auto p_buf = std::make_shared<buffer_t>(buf);
     boost::asio::async_write(socket_,boost::asio::buffer(*p_buf),
                              boost::asio::transfer_all(),
