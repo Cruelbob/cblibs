@@ -15,7 +15,7 @@ namespace protocol {
 class connection {
     connection(const connection&);
     connection& operator=(const connection&);
-    friend class server;
+    template<typename ConnType> friend class server;
     friend class client;
   public:
     typedef uint16_t id_type;
@@ -43,6 +43,12 @@ class connection {
     template<typename... Types>
       void set_on_packet(id_type packet_id,
                          const std::function<void (Types...)>& f);
+    template<typename T1,typename T2>
+      void set_on_packet(id_type packet_id,
+                         const std::function<void (T1,T2)>& f);
+    template<typename T1, typename T2, typename T3>
+      void set_on_packet(id_type packet_id,
+          const std::function<void (T1,T2,T3)>& f);
     void remove_handler(id_type packet_id);
   protected:
     virtual void on_connect(int result) {}
@@ -119,37 +125,76 @@ void connection::set_on_packet(id_type packet_id,
                                void (C::* method)(Types...),
                                C * obj)
 {
-    packets_[packet_id] = [=](const buffer_t& buf) {
+    set_on_packet(packet_id, [=](Types&&... args) {
+        (obj->*method)(std::forward<Types>(args)...);
+    });
+    /*packets_[packet_id] = [=](const buffer_t& buf) {
         net_bin_reader reader(buf);
         detail::pass{method,obj,reader.read
             <typename std::remove_cv<typename std::remove_reference<Types>::type>::type>()...};
-    };
+    };*/
 }
 
-template<typename... Types>
-void connection::set_on_packet(id_type packet_id,
-                               const std::function<void (Types...)>& f)
-{
-    packets_[packet_id] = [=](const buffer_t& buf) {
-        net_bin_reader reader(buf);
-        detail::pass{f,reader.read
-               <typename std::remove_cv<typename std::remove_reference<Types>::type>::type>()...};
-    };
-}
+
 
 template<typename... Types>
 void connection::set_on_packet(id_type packet_id,void (*f)(Types...)) {
-    packets_[packet_id] = [=](const buffer_t& buf) {
+    set_on_packet(packet_id, [=](Types && ... args) {
+        f(std::forward<Types>(args)...);
+    });
+    /*packets_[packet_id] = [=](const buffer_t& buf) {
         net_bin_reader reader(buf);
         detail::pass{f,reader.read
             <typename std::remove_cv<typename std::remove_reference<Types>::type>::type>()...};
-    };
+    };*/
 }
 
 template<typename F>
 void connection::set_on_packet(id_type packet_id,const F& f) {
     typename detail::functor_to_function<decltype(&F::operator())>::type functor = f;
     set_on_packet(packet_id,functor);
+}
+
+template<typename... Types>
+void connection::set_on_packet(id_type packet_id,
+    const std::function<void (Types...)>& f)
+{
+    static_assert(sizeof...(Types) <= 3, "implementation defined <=3");
+    packets_[packet_id] = [=](const buffer_t& buf) {
+        net_bin_reader reader(buf);
+        detail::pass{ f, reader.read
+            <typename std::remove_cv<typename std::remove_reference<Types>::type>::type>()... };
+    };
+}
+
+template<typename T1, typename T2>
+void connection::set_on_packet(id_type packet_id,
+                               const std::function<void (T1,T2)>& f)
+{
+    packets_[packet_id] = [=](const buffer_t& buf) {
+        net_bin_reader reader(buf);
+        T1 t1(reader.read
+            <typename std::remove_cv<typename std::remove_reference<T1>::type>::type>());
+        T2 t2(reader.read
+            <typename std::remove_cv<typename std::remove_reference<T2>::type>::type>());
+        f(t1, t2);
+    };
+}
+
+template<typename T1, typename T2, typename T3>
+void connection::set_on_packet(id_type packet_id,
+                               const std::function<void (T1,T2,T3)>& f)
+{
+    packets_[packet_id] = [=](const buffer_t& buf) {
+        net_bin_reader reader(buf);
+        T1 t1(reader.read
+            <typename std::remove_cv<typename std::remove_reference<T1>::type>::type>());
+        T2 t2(reader.read
+            <typename std::remove_cv<typename std::remove_reference<T2>::type>::type>());
+        T3 t3(reader.read
+            <typename std::remove_cv<typename std::remove_reference<T2>::type>::type>());
+        f(t1,t2,t3);
+    };
 }
 }
 }

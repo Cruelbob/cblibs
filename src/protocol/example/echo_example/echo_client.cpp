@@ -7,11 +7,11 @@
 #include "packet_ids.hpp"
 
 int main(int argc,char** argv) {
+    boost::asio::io_service io_service;
     try {
-		boost::asio::io_service io_service;
         cb::protocol::client mc(io_service);
         mc.set_on_packet(msgs::s2c::echo,[&](const std::string& str) {
-            std::cout << "from server: " << str << std::endl;
+			std::cout << "from server: " << str << std::endl;
             mc.close();
         });
         auto con_res = mc.connect("127.0.0.1",1234);
@@ -27,6 +27,5 @@ int main(int argc,char** argv) {
     } catch(const std::exception& ex) {
         std::cout << ex.what() << std::endl;
     }
-	getchar();
     return 0;
 }
