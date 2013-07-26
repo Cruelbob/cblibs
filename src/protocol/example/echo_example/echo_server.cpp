@@ -13,9 +13,9 @@ class my_s_con: public cb::protocol::connection {
         set_on_packet(msgs::c2s::echo,&my_s_con::on_request,this);
     }
     void on_request(std::string& str) {
-		std::reverse(str.begin(), str.end());
+        std::reverse(str.begin(), str.end());
         send(msgs::s2c::echo,str);
-		close();
+        close();
     }
 };
 
