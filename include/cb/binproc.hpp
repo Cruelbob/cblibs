@@ -75,9 +75,11 @@ namespace cb
             }
             void read_raw(void *buf,size_type count)
             {
-                assert(get_pointer+count <= size_);
-                std::memcpy(buf,&data_[get_pointer],count);
-                get_pointer+=count;
+                if (count) {
+                    assert(get_pointer + count <= size_);
+                    std::memcpy(buf, &data_[get_pointer], count);
+                    get_pointer += count;
+                }
             }
             void skip(size_type count)
             {
@@ -213,9 +215,11 @@ namespace cb
             }
             void write_raw(const void *buf,size_type count)
             {
-                size_t put_pointer = data_.size();
-                data_.resize(data_.size()+count);
-                std::memcpy(&data_[put_pointer],buf,count);
+                if (count) {
+                    size_t put_pointer = data_.size();
+                    data_.resize(data_.size() + count);
+                    std::memcpy(&data_[put_pointer], buf, count);
+                }
             }
             void skip(size_type count)
             {

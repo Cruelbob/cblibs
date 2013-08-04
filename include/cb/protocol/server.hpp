@@ -19,12 +19,13 @@ class server {
   protected:
     virtual std::shared_ptr<ConnType>
                         create_connection(boost::asio::io_service& io_service);
+  protected:
+    std::list<std::shared_ptr<ConnType>> connections_;
   private:
     void start_accept();
 
     boost::asio::io_service io_service_;
     boost::asio::ip::tcp::acceptor acceptor_;
-    std::list<std::shared_ptr<ConnType>> connections_;
 };
 
 template<typename ConnType>
